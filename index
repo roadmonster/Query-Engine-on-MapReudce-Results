@@ -1,0 +1,45 @@
+hdfs dfs -rm /user/training/data-output/term-count/*
+hdfs dfs -rm /user/training/data-output/doc-length/*
+hdfs dfs -rm /user/training/data-output/split-doc-term/*
+hdfs dfs -rm /user/training/data-output/doc-freq/*
+hdfs dfs -rmdir /user/training/data-output/split-doc-term
+hdfs dfs -rmdir /user/training/data-output/term-count
+hdfs dfs -rmdir /user/training/data-output/doc-length
+hdfs dfs -rmdir /user/training/data-output/doc-freq
+
+
+hadoop jar /usr/lib/hadoop-mapreduce/hadoop-streaming.jar \
+ -file /home/training/mrstreaming/term-count/mapper.py \
+ -mapper /home/training/mrstreaming/term-count/mapper.py \
+ -file /home/training/mrstreaming/term-count/reducer.py \
+ -reducer /home/training/mrstreaming/term-count/reducer.py \
+ -input /user/training/data-input/documents \
+ -output /user/training/data-output/term-count \
+
+hadoop jar /usr/lib/hadoop-mapreduce/hadoop-streaming.jar \
+ -file /home/training/mrstreaming/doc-length/mapper.py \
+ -mapper /home/training/mrstreaming/doc-length/mapper.py \
+ -file /home/training/mrstreaming/doc-length/reducer.py \
+ -reducer /home/training/mrstreaming/doc-length/reducer.py \
+ -input /user/training/data-input/documents \
+ -output /user/training/data-output/doc-length \
+
+hadoop jar /usr/lib/hadoop-mapreduce/hadoop-streaming.jar \
+ -file /home/training/mrstreaming/split-doc-term/mapper.py \
+ -mapper /home/training/mrstreaming/split-doc-term/mapper.py \
+ -input /user/training/data-output/term-count \
+ -output /user/training/data-output/split-doc-term \
+
+
+hadoop jar /usr/lib/hadoop-mapreduce/hadoop-streaming.jar \
+ -file /home/training/mrstreaming/doc-freq/mapper.py \
+ -mapper /home/training/mrstreaming/doc-freq/mapper.py \
+ -file /home/training/mrstreaming/doc-freq/reducer.py \
+ -reducer /home/training/mrstreaming/doc-freq/reducer.py \
+ -input /user/training/data-input/documents \
+ -output /user/training/data-output/doc-freq \
+
+hive -f prepare.sql
+hdfs dfs -getmerge /user/training/data-output/tfidf tfidf.csv
+python queryEngine.py
+
